@@ -30,12 +30,12 @@ year_range = (1920,2100)
 component = 'ocn'
 freq = 'monthly'
 
-varlist = ['TEMP','AOU','O2_PRODUCTION','STF_O2','O2','O2_CONSUMPTION','PD',
-           'IAGE']
+varlist = ['OUR:AOU,IAGE','NPP:photoC_sp,photoC_diat,photoC_diaz','TEMP',
+           'AOU','O2_PRODUCTION','STF_O2','O2','O2_CONSUMPTION','PD','IAGE']
 
 #-- compute annual means
 #-- get case info
-info = cesm_le.case_info(include_control = True,
+info = cesm_le.case_info(include_control = False,
                          include_rcp85 = True,
                          include_rcp45 = True)
 
@@ -63,7 +63,9 @@ def ensemble_ops(file_list,scenario):
 #-------------------------------------------------------------------------------
 
 def open_ens(sc,op,varlist):
-    plot_grid_vars = ['TLAT','TLONG','KMT','TAREA','ULAT','ULONG','UAREA']
+    plot_grid_vars = ['TLAT','TLONG','KMT','TAREA','ULAT','ULONG','UAREA',
+                      'z_t','z_t_150m','z_w','dz',
+                      'area_sum','vol_sum']
 
     if not isinstance(varlist,list):
         varlist = [varlist]
@@ -96,14 +98,32 @@ if __name__ == '__main__':
     file_ann = {}
     for variable in varlist:
 
-        #-- list of files
-        file_list = cesm_le.tseries_files(info['caselist'],component,freq,variable)
-        if file_list is None: sys.exit(1)
+        preprocess = ['calc_ann_mean']
+
+        #-- "derived variables" are made from combinations of multiple variables
+        if ':' in variable:
+            var_varlist = variable.split(':')[1].split(',')
+            variable = variable.split(':')[0]
+            file_list = []
+            for j,v in enumerate(var_varlist):
+                file_list_v = cesm_le.tseries_files(info['caselist'],component,freq,v)
+                for i,case_files in enumerate(file_list_v):
+                    if j == 0:
+                        file_list.append({v:case_files})
+                    else:
+                        file_list[i].update({v:case_files})
+            preprocess = ['pop_derive_var_'+variable]+preprocess
+
+        else:
+            #-- list of files = [[case_files],[case_files]...]
+            file_list = cesm_le.tseries_files(info['caselist'],component,freq,variable)
+            if file_list is None: sys.exit(1)
 
         file_ann[variable] = []
 
         #-- loop over cases
         for i,case_files in enumerate(file_list):
+
             file_out = et.hfile(dirname=diro['work'],
                                 prefix=info['scenario'][i],
                                 ens=info['ens'][i],
@@ -113,13 +133,17 @@ if __name__ == '__main__':
 
             file_ann[variable].append(file_out)
             if not file_out.exists() or clobber:
-                control = {'task' : 'tseries_dataset',
+                control = {'task' : 'open_tsdataset',
                            'kwargs': {'file_out':file_out(),
-                                      'case_files':case_files,
-                                      'yr0':info['yr0'][i],
+                                      'paths':case_files,
+                                      'year_offset':info['yr0'][i],
                                       'year_range':year_range,
-                                      'transform_func' : ['calc_ann_mean']}}
+                                      'preprocess' : preprocess}}
+                import json
+                with open('junk.json','w') as fid:
+                    json.dump(control,fid)
                 jid = tm.submit([easy,et.json_cmd(control)])
+                exit()
 
     tm.wait()
 
@@ -176,21 +200,6 @@ if __name__ == '__main__':
         ensemble_ops(file_ann_za[variable],'tr85')
         ensemble_ops(file_ann_za[variable],'tr45')
 
-
-#-------------------------------------------------------------------------------
-#-- compute grid
-#-------------------------------------------------------------------------------
-
-    file_in = file_ann_dft[varlist[0]][0]
-    file_out = et.hfile(dirname=diro['work'],
-                        prefix='pop_grid_vol')
-    if not file_out.exists():
-        control = {'task' : 'transform_file',
-                   'kwargs': {'file_out':file_out(),
-                              'file_in':file_in(),
-                              'transform_func' : ['pop_ocean_volume']}}
-        jid = tm.submit([easy,et.json_cmd(control)])
-
 #-------------------------------------------------------------------------------
 #-- compute global means
 #-------------------------------------------------------------------------------
@@ -206,7 +215,7 @@ if __name__ == '__main__':
                 control = {'task' : 'transform_file',
                            'kwargs': {'file_out':file_out(),
                                       'file_in':file_in(),
-                                      'transform_func' : ['pop_calc_global_mean']}}
+                                      'preprocess' : ['pop_calc_global_mean']}}
                 jid = tm.submit([easy,et.json_cmd(control)])
 
     tm.wait()
@@ -232,7 +241,7 @@ if __name__ == '__main__':
                 control = {'task' : 'transform_file',
                            'kwargs': {'file_out':file_out(),
                                       'file_in':file_in(),
-                                      'transform_func' : ['pop_calc_area_mean']}}
+                                      'preprocess' : ['pop_calc_area_mean']}}
                 jid = tm.submit([easy,et.json_cmd(control)])
 
     tm.wait()
@@ -260,7 +269,7 @@ if __name__ == '__main__':
                 control = {'task' : 'transform_file',
                            'kwargs': {'file_out':file_out(),
                                       'file_in':file_in(),
-                                      'transform_func' : ['pop_calc_vertical_integral']}}
+                                      'preprocess' : ['pop_calc_vertical_integral']}}
                 jid = tm.submit([easy,et.json_cmd(control)])
 
     tm.wait()
