@@ -139,11 +139,7 @@ if __name__ == '__main__':
                                       'year_offset':info['yr0'][i],
                                       'year_range':year_range,
                                       'preprocess' : preprocess}}
-                import json
-                with open('junk.json','w') as fid:
-                    json.dump(control,fid)
                 jid = tm.submit([easy,et.json_cmd(control)])
-                exit()
 
     tm.wait()
 
