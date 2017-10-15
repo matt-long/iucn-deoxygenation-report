@@ -30,12 +30,12 @@ year_range = (1920,2100)
 component = 'ocn'
 freq = 'monthly'
 
-varlist = ['OUR:AOU,IAGE','NPP:photoC_sp,photoC_diat,photoC_diaz','TEMP',
+varlist = ['OUR:AOU,IAGE','TEMP',
            'AOU','O2_PRODUCTION','STF_O2','O2','O2_CONSUMPTION','PD','IAGE']
 
 #-- compute annual means
 #-- get case info
-info = cesm_le.case_info(include_control = False,
+info = cesm_le.case_info(include_control = True,
                          include_rcp85 = True,
                          include_rcp45 = True)
 
@@ -103,7 +103,6 @@ if __name__ == '__main__':
         #-- "derived variables" are made from combinations of multiple variables
         if ':' in variable:
             var_varlist = variable.split(':')[1].split(',')
-            variable = variable.split(':')[0]
             file_list = []
             for j,v in enumerate(var_varlist):
                 file_list_v = cesm_le.tseries_files(info['caselist'],component,freq,v)
