@@ -179,6 +179,11 @@ if __name__ == '__main__':
 
     file_ann_za = {}
     for variable in varlist:
+
+        # za cannot handle missing values, skip OUR
+        if variable.split(':')[0] == 'OUR':
+            continue
+
         file_ann_za[variable] = []
         for file_in in file_ann_dft[variable]:
 
@@ -193,6 +198,8 @@ if __name__ == '__main__':
     tm.wait()
 
     for variable in varlist:
+        if variable.split(':')[0] == 'OUR':
+            continue
         ensemble_ops(file_ann_za[variable],'tr85')
         ensemble_ops(file_ann_za[variable],'tr45')
 
