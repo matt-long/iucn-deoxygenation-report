@@ -598,15 +598,16 @@ def canvas_map_contour_overlay(lon,lat,z,
     while True:
         i += 1
         try:
-            gs[i]
+            gridspec[i]
         except:
             break
-    gs_len = i
 
-    if gs_len == 1:
+    len_gs = i
+    if len_gs == 1:
         shrink_factor = 0.5
     else:
         shrink_factor = 0.75
+
     cb = fig.colorbar(cf,ax = ax,
                       ticks = contour_specs['levels'],
                       orientation = 'vertical',

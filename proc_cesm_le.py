@@ -160,7 +160,7 @@ if __name__ == '__main__':
         file_drift = file_ann[variable][0]().replace('.nc','.drift_corr.nc')
         if not all([f.exists() for f in file_out_list]):
             control = {'task' : 'apply_drift_correction_ann',
-                       'kwargs': {'variable':variable,
+                       'kwargs': {'variable':variable.split(':')[0],
                                   'file_ctrl':file_ann[variable][0](),
                                   'file_drift':file_drift,
                                   'file_in_list':[f() for f in file_ann[variable]],
