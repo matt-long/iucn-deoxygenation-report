@@ -103,6 +103,7 @@ if __name__ == '__main__':
         #-- "derived variables" are made from combinations of multiple variables
         if ':' in variable:
             var_varlist = variable.split(':')[1].split(',')
+            variable_tmp = variable.split(':')[0]
             file_list = []
             for j,v in enumerate(var_varlist):
                 file_list_v = cesm_le.tseries_files(info['caselist'],component,freq,v)
@@ -111,7 +112,7 @@ if __name__ == '__main__':
                         file_list.append({v:case_files})
                     else:
                         file_list[i].update({v:case_files})
-            preprocess = ['pop_derive_var_'+variable]+preprocess
+            preprocess = ['pop_derive_var_'+variable_tmp]+preprocess
 
         else:
             #-- list of files = [[case_files],[case_files]...]
