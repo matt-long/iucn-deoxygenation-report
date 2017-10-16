@@ -15,16 +15,9 @@ plt.rcParams['font.sans-serif']=['DejaVu Sans','Fira Sans OT','Bitstream Vera Sa
 plt.rcParams['font.size'] = 9
 plt.rcParams['mathtext.default']='regular'
 
-class norm_midpoint(colors.Normalize):
-    def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
-        self.midpoint = midpoint
-        colors.Normalize.__init__(self, vmin, vmax, clip)
-
-    def __call__(self, value, clip=None):
-        # I'm ignoring masked values and all kinds of edge cases to make a
-        # simple example...
-        x, y = [self.vmin, self.midpoint, self.vmax], [0, 0.5, 1]
-        return np.ma.masked_array(np.interp(value, x, y))
+#-------------------------------------------------------------------------------
+#-- class
+#-------------------------------------------------------------------------------
 
 class MidPointNorm(colors.Normalize):
     def __init__(self, midpoint=0, vmin=None, vmax=None, clip=False):
@@ -90,6 +83,10 @@ class MidPointNorm(colors.Normalize):
             else:
                 return  val*abs(vmax-midpoint) + midpoint
 
+#-------------------------------------------------------------------------------
+#-- function
+#-------------------------------------------------------------------------------
+
 def nice_levels(cmin,cmax,max_steps,outside=False):
     '''
     Return nice contour levels
@@ -136,6 +133,9 @@ def nice_levels(cmin,cmax,max_steps,outside=False):
 
     return np.arange(min_out,max_out+step_size,step_size)
 
+#-------------------------------------------------------------------------------
+#-- function
+#-------------------------------------------------------------------------------
 
 def plotgrid(fig,gs,ax,plot_dim,gridspec_kwargs_in={}):
 
@@ -199,9 +199,11 @@ def plotgrid(fig,gs,ax,plot_dim,gridspec_kwargs_in={}):
     print('new plot size: %.2f,%.2f'%(axW_d,axH_d))
 
     return [figW_in,figH_in]
+
 #---------------------------------------------------------
 #--- function
 #---------------------------------------------------------
+
 def rasterize_and_save(fname, rasterize_list=None, fig=None, dpi=None,
                        savefig_kw={}):
     """Save a figure with raster and vector components
@@ -321,22 +323,23 @@ def rasterize_and_save(fname, rasterize_list=None, fig=None, dpi=None,
 #---------------------------------------------------------
 #--- function
 #---------------------------------------------------------
+
 def adjust_pop_grid(tlon,tlat,field):
     nj = tlon.shape[0]
     ni = tlon.shape[1]
     xL = ni/2 - 1
     xR = xL + ni
 
-    tlon = np.where(np.greater_equal(tlon,min(tlon[:,0])),tlon-360,tlon)
-    lon  = np.concatenate((tlon,tlon+360),1)
+    tlon = np.where(np.greater_equal(tlon,min(tlon[:,0])),tlon-360.,tlon)
+    lon  = np.concatenate((tlon,tlon+360.),1)
     lon = lon[:,xL:xR]
 
     if ni == 320:
-        lon[367:-3,0] = lon[367:-3,0]+360
-    lon = lon - 360
+        lon[367:-3,0] = lon[367:-3,0]+360.
+    lon = lon - 360.
     lon = np.hstack((lon,lon[:,0:1]+360.))
     if ni == 320:
-        lon[367:,-1] = lon[367:,-1] - 360
+        lon[367:,-1] = lon[367:,-1] - 360.
 
     #-- periodicity
     lat  = np.concatenate((tlat,tlat),1)
@@ -348,210 +351,22 @@ def adjust_pop_grid(tlon,tlat,field):
     field = np.ma.hstack((field,field[:,0:1]))
     return lon,lat,field
 
-#---------------------------------------------------------
-#--- function
-#-------------------------------------------------
-
-def plot_map_contour_overlay(lon,lat,z,levels,cmap,units,plot_name):
-    #-- make canvas
-    fig=plt.figure(figsize=(10, 8),dpi=300)
-    ax = plt.axes(projection=ccrs.Robinson(central_longitude=300.0))
-    ax.set_global()
-
-    #-- make filled contours
-    cf = ax.contourf(lon,lat,z,
-                     levels = levels,
-                     transform=ccrs.PlateCarree(),
-                     cmap=cmap)
-    #-- rasterize
-    zorder = 0
-    for contour_level in cf.collections:
-        contour_level.set_zorder(zorder)
-        contour_level.set_rasterized(True)
-
-    #-- add contour lines
-    cs = ax.contour(lon,lat,z,
-                    colors='k',
-                    levels = levels,
-                    linewidths = 0.5,
-                    transform=ccrs.PlateCarree(),
-                    zorder=len(cf.collections)+10)
-
-    #-- add contour labels
-    lb = plt.clabel(cs, fontsize=6,
-                   inline = True,
-                   fmt='%.0f')
-
-    #-- add land mask
-    land = ax.add_feature(cartopy.feature.LAND, zorder=100,
-                           edgecolor='black', facecolor='black')
-
-    #-- add colorbar
-    cb = fig.colorbar(cf,ax = ax,
-                      ticks = levels,
-                      orientation = 'vertical',
-                      shrink = 0.5)
-    cb.ax.set_title(units)
-    plt.savefig(plot_name,dpi=300,bbox_inches='tight')
-
-#---------------------------------------------------------
-#--- function
-#---------------------------------------------------------
-def plot_map(lon_in,lat_in,field,
-                    plot_dim = (1,1,),
-                    ispop = False,
-                    plot_name='plot_field_map.png',
-                    contour_specs = {},
-                    colorbar_specs = {},
-                    gridspec_kwargs = {},
-                    extent = [],
-                    title = [],
-                    units = '',
-                    methods = [],
-                    letter0 = 0,
-                    label_plots = True,
-                    figsize=(6.40,4.80)):
-
-    _,ext = os.path.splitext(plot_name)
-    if ext not in ['.png','.pdf','.eps','.ps','.jpg']:
-        print('file_out extension: %s'%ext)
-        print('ERROR: need plotting format for output')
-        exit(1)
-
-    #-- some default resources for plotting
-    contour_specs_def = {'transform': ccrs.PlateCarree()}
-
-    #-- update intent(in) specs with defaults, but don't overwrite
-    contour_specs.update({k:v for k,v in contour_specs_def.items()
-                          if k not in contour_specs})
-
-    #-- some default resources for colorbar
-    colorbar_specs_def = {'orientation' : 'vertical', 'shrink':0.7}
-
-    #-- update intent(in) specs with defaults, but don't overwrite
-    colorbar_specs.update({k:v for k,v in colorbar_specs_def.items()
-                          if k not in colorbar_specs})
-
-
-    #-- make arguments into lists
-    if not isinstance(field,list):
-        field = [field]
-
-    #-- if not list, assume value applies to all
-    if not isinstance(lon_in,list):
-        lon_in = [lon_in]*len(field)
-
-    #-- if not list, assume value applies to all
-    if not isinstance(lat_in,list):
-        lat_in = [lat_in]*len(field)
-
-    #-- if not list, assume value applies to all
-    if not isinstance(ispop,list):
-        ispop = [ispop]*len(field)
-
-    #-- make figure
-    fig = plt.figure(dpi=300,figsize=figsize)
-
-    nrow,ncol = plot_dim
-    gs = gridspec.GridSpec(nrow,ncol)
-
-    if extent:
-        prj = ccrs.PlateCarree()
-    else:
-        prj = ccrs.Robinson(central_longitude=300)
-
-    #-- loop over subplots
-    ax = np.array([None for fld in field])
-    cf = np.array([None for fld in field])
-    land = np.array([None for fld in field])
-    lb = np.array([None for fld in field])
-    row = 0
-    col = 0
-
-    print(plot_name)
-    for i,(lon_ini,lat_ini,fld) in enumerate(zip(lon_in,lat_in,field)):
-        print('plotting %d/%d'%(i+1,len(field)))
-
-        ax[i] = fig.add_subplot(gs[row,col],
-                                projection=prj)
-        col += 1
-        if col == ncol:
-            row += 1
-            col = 0
-
-        if extent:
-            ax[i].set_extent(extent)
-        else:
-            ax[i].set_global()
-        ax[i].background_patch.set_fill(False)
-
-        #-- is POP?
-        if ispop[i]:
-            lon,lat,values = adjust_pop_grid(lon_ini,lat_ini,fld)
-        else:
-            values = fld
-            lon = lon_ini
-            lat = lat_ini
-
-        if np.any(np.isnan(values)):
-            values = np.ma.where(np.isnan(values),0.,values)
-            values = np.ma.masked_where(values==values.fill_value,values)
-
-
-        #-- make contour map
-        cf[i] = ax[i].contourf(lon, lat, values,**contour_specs)
-
-        land[i] = ax[i].add_feature(cartopy.feature.LAND, zorder=1,
-                                 edgecolor='black', facecolor='black')
-        if title:
-            ax[i].set_title(title[i],y=0.98)
-
-    #-- adjust figure dimensions to make plots fit
-    fgsz = plotgrid(fig, gs, ax, plot_dim,gridspec_kwargs)
-    #-- add a colorbar
-    cb = fig.colorbar(cf[0],
-                      ax=ax.ravel().tolist(),
-                      **colorbar_specs)
-    cb.ax.tick_params(labelsize=8)
-    if units:
-        cb.ax.set_title(units)
-
-    #-- execute incoming methods
-    for cmd in methods:
-        eval(cmd)
-
-    #-- label plots
-    if label_plots:
-        alp = [chr(i) for i in range(97+letter0,97+26)]
-        for i,axi in enumerate(ax):
-            transform = ccrs.PlateCarree()._as_mpl_transform(ax[i])
-            lb[i] = ax[i].annotate('(%s)'%alp[i], xy=(50., 50.),
-                                   xycoords=transform,
-                                   color='white',fontsize=12.,
-                                   fontweight = 'semibold',
-                                   bbox=dict(boxstyle='square,pad=-0.01',
-                                             fc='black',ec='none'))
-    #-- save the figure
-    savefig_kw={'bbox_inches':'tight'}
-    if ext in ['.pdf','.eps','.ps']:
-        rasterize_and_save(plot_name,
-                           rasterize_list=cf.tolist()+land.tolist(),
-                           dpi=300,savefig_kw=savefig_kw)
-    else:
-        plt.savefig(plot_name,dpi=300,**savefig_kw)
-    plt.close(fig)
-    print('created: '+plot_name)
 
 #-------------------------------------------------------------------------------
-#-- function
+#-- class
 #-------------------------------------------------------------------------------
-class nf(float):
+
+class contour_label_format(float):
     def __repr__(self):
         str = '%.1f' % (self.__float__(),)
         if str[-1] == '0':
             return '%.0f' % self.__float__()
         else:
             return '%.1f' % self.__float__()
+
+#-------------------------------------------------------------------------------
+#-- function
+#-------------------------------------------------------------------------------
 
 def canvas_map_contour_overlay(lon,lat,z,
                                contour_specs,
@@ -562,7 +377,7 @@ def canvas_map_contour_overlay(lon,lat,z,
 
 
     #-- make canvas
-    ax = fig.add_subplot(gridspec[row,col],projection=ccrs.Robinson(central_longitude=300.0))
+    ax = fig.add_subplot(gridspec[row,col],projection=ccrs.Robinson(central_longitude=305.0))
     ax.set_global()
 
     #-- make filled contours
@@ -582,7 +397,7 @@ def canvas_map_contour_overlay(lon,lat,z,
                     linewidths = 0.5,
                     transform=ccrs.PlateCarree(),
                     zorder=len(cf.collections)+10)
-    cs.levels = [nf(val) for val in cs.levels]
+    cs.levels = [contour_label_format(val) for val in cs.levels]
     fmt = '%r'
     #-- add contour labels
     lb = plt.clabel(cs, fontsize=6,
@@ -590,8 +405,12 @@ def canvas_map_contour_overlay(lon,lat,z,
                    fmt=fmt)
 
     #-- add land mask
-    land = ax.add_feature(cartopy.feature.LAND, zorder=100,
-                           edgecolor='black', facecolor='black')
+    land = ax.add_feature(
+        cartopy.feature.NaturalEarthFeature('physical','land','110m',
+                                            edgecolor='face',
+                                            facecolor='black'))
+    #land = ax.add_feature(cartopy.feature.LAND, zorder=100,
+    #                       edgecolor='black', facecolor='black')
 
     #-- add colorbar
     i = 0
@@ -677,88 +496,5 @@ def canvas_full_depth_section(x,y,field,
 
     return {'gs':gs,'ax':ax,'cf':cf}
 
-def plot_section(x,y,field,
-                 plot_name,
-                 contour_specs = {},
-                 colorbar_specs = {},
-                 xlim = [-78,70],
-                 units = '',
-                 title_left = '',
-                 title_right = '',
-                 figsize=(6.40,4.80)):
-
-    _,ext = os.path.splitext(plot_name)
-    if ext not in ['.png','.pdf','.eps','.ps','.jpg']:
-        print('file_out extension: %s'%ext)
-        print('ERROR: need plotting format for output')
-        exit(1)
-
-    #-- some default resources for plotting
-    contour_specs_def = {}
-
-    #-- update intent(in) specs with defaults, but don't overwrite
-    contour_specs.update({k:v for k,v in contour_specs_def.items()
-                          if k not in contour_specs})
-
-    #-- some default resources for colorbar
-    colorbar_specs_def = {'drawedges' :True}
-
-    #-- update intent(in) specs with defaults, but don't overwrite
-    colorbar_specs.update({k:v for k,v in colorbar_specs_def.items()
-                          if k not in colorbar_specs})
-    #-- make figure
-    fig = plt.figure(dpi=300,figsize=figsize)
-
-    ax1 = fig.add_axes([0.1,0.51,0.7,0.35])
-    ax2 = fig.add_axes([0.1,0.1,0.7,0.4])
-
-    mesh = ax1.contourf(x, y, field, **contour_specs)
-    mesh2 = ax2.contourf(x, y, field, **contour_specs)
-
-    ax1.set_ylim([1000.,0.])
-    ax2.set_ylim([5000.,1000.])
-
-    ax1.set_xlim(xlim)
-    ax2.set_xlim(xlim)
-
-    ax1.set_xticklabels([])
-    ax1.set_yticklabels(np.arange(0,1000,200))
-    ax1.minorticks_on()
-    ax1.tick_params(which='major',direction='out',width=1,  length=6)
-    ax1.tick_params(which='minor',direction='out',width=0.5,  length=4)
-    ax1.xaxis.set_ticks_position('top')
-
-    ax2.minorticks_on()
-    ax2.tick_params(which='major',direction='out',width=1,  length=6)
-    ax2.tick_params(which='minor',direction='out',width=0.5,  length=4)
-    ax2.set_xlabel('Latitude [$^\circ$N]')
-    ax2.xaxis.set_ticks_position('bottom')
-
-    ax2.set_ylabel('Depth [m]')
-    ax2.yaxis.set_label_coords(-0.12, 1.05)
-
-    ax1.set_facecolor((0, 0, 0))
-    ax2.set_facecolor((0, 0, 0))
-
-    cbaxes = fig.add_axes([0.85, 0.2, 0.03, 0.6])
-    cb = fig.colorbar(mesh, cax=cbaxes, **colorbar_specs)
-
-    if units:
-        cb.ax.set_title(units,y=1.04)
-
-    if title_right:
-        ax1.set_title(title_right,loc='right')
-
-    if title_left:
-        ax1.set_title(title_left,loc='left')
-
-    #-- save the figure
-    savefig_kw={'bbox_inches':'tight'}
-    if ext in ['.pdf','.eps','.ps']:
-        rasterize_and_save(plot_name,
-                           rasterize_list=[mesh,mesh2],
-                           dpi=300,savefig_kw=savefig_kw)
-    else:
-        plt.savefig(plot_name,dpi=300,**savefig_kw)
-
-    print('created: '+plot_name)
+# TODO: add regrid capability?
+#https://github.com/j08lue/pygeo/blob/master/pygeo/regrid.py

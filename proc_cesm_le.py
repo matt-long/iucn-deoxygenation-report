@@ -58,14 +58,16 @@ def ensemble_ops(file_list,scenario):
                    'file_out_std':file_out_std()}}
         jid = tm.submit([easy,et.json_cmd(control)])
 
+
 #-------------------------------------------------------------------------------
 #-- function
 #-------------------------------------------------------------------------------
 
-def open_ens(sc,op,varlist,dimsub={}):
+def open_ens(sc,op,varlist,sel={},isel={}):
+
     plot_grid_vars = ['TLAT','TLONG','KMT','TAREA','ULAT','ULONG','UAREA',
                       'z_t','z_t_150m','z_w','dz',
-                      'area_sum','vol_sum']
+                      'area_sum','vol_sum','year','lat_t','lat_t_edges']
 
     if not isinstance(varlist,list):
         varlist = [varlist]
@@ -79,13 +81,16 @@ def open_ens(sc,op,varlist,dimsub={}):
             print(glob_patt)
             sys.exit(1)
 
+        #-- preprocess function: subset dataset (if necessary)
+        subsetter = lambda ds: et.dimension_subset(ds,isel=isel,sel=sel)
         dsi = xr.open_mfdataset(files,concat_dim='ens',decode_times=False,
-                                decode_coords=False)
+                                decode_coords=False,preprocess=subsetter)
 
-        dsg = dsi.drop([k for k in dsi if k not in plot_grid_vars]).isel(ens=0)
+        dsg = dsi.drop([k for k in dsi if k not in plot_grid_vars])
+        if 'ens' in dsg.dims:
+            dsg = dsg.isel(ens=0)
         dsi = dsi.drop([k for k in dsi if k not in varlist])
-        if dimsub:
-            dsi = dsi.isel(**dimsub)
+
         dss.append(dsi)
 
     dss = xr.merge(dss)

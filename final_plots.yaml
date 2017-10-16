@@ -1,0 +1,11 @@
+- plot_woa_o2pdf_mortality_no3deficit.ipynb
+- plot_o2_sol.ipynb
+- plot_woa_thermocline_o2_and_age_metric.ipynb
+- plot_woa_column_min_sat.ipynb
+- plot_woa_stratification.ipynb
+- plot_cesm_global_timeseries.ipynb
+- plot_cesm_zonal_sections.ipynb
+- plot_cesm_temperature_change.ipynb
+- plot_cesm_stratification_present_future.ipynb
+- plot_cesm_change_thermocline_o2.ipynb
+# - plot_cesm_global_profile.ipynb
