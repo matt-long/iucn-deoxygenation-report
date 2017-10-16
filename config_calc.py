@@ -18,6 +18,7 @@ import esm_tools as et
 diro = {}
 diro['out'] = '/glade/scratch/mclong/calcs/iucn-ch'
 diro['work'] = '/glade/scratch/mclong/calcs/iucn-ch/work'
+diro['tmp'] = '/glade/scratch/mclong/tmp/iucn-ch'
 diro['fig'] =  '/glade/p/work/mclong/fig/iucn-ch'
 diro['logs'] = './logs'
 

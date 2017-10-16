@@ -62,7 +62,7 @@ def ensemble_ops(file_list,scenario):
 #-- function
 #-------------------------------------------------------------------------------
 
-def open_ens(sc,op,varlist):
+def open_ens(sc,op,varlist,dimsub={}):
     plot_grid_vars = ['TLAT','TLONG','KMT','TAREA','ULAT','ULONG','UAREA',
                       'z_t','z_t_150m','z_w','dz',
                       'area_sum','vol_sum']
@@ -70,7 +70,7 @@ def open_ens(sc,op,varlist):
     if not isinstance(varlist,list):
         varlist = [varlist]
     dss = []
-    for v in varlist:
+    for i,v in enumerate(varlist):
         glob_patt = os.path.join(
             diro['work'],'%s.[0-9][0-9][0-9].%s.%s.1920-2100.nc'%(sc,op,v))
         files = sorted(glob(glob_patt))
@@ -78,16 +78,19 @@ def open_ens(sc,op,varlist):
             print('no files')
             print(glob_patt)
             sys.exit(1)
-        dsi = xr.open_mfdataset(files,
-                                concat_dim='ens',
-                                decode_times=False,
+
+        dsi = xr.open_mfdataset(files,concat_dim='ens',decode_times=False,
                                 decode_coords=False)
-        dsi = dsi.drop([k for k in dsi
-                        if k not in varlist+plot_grid_vars])
+
+        dsg = dsi.drop([k for k in dsi if k not in plot_grid_vars]).isel(ens=0)
+        dsi = dsi.drop([k for k in dsi if k not in varlist])
+        if dimsub:
+            dsi = dsi.isel(**dimsub)
         dss.append(dsi)
 
-    return xr.merge(dss)
+    dss = xr.merge(dss)
 
+    return xr.merge((dss,dsg))
 
 if __name__ == '__main__':
 
@@ -213,7 +216,7 @@ if __name__ == '__main__':
         for file_in in file_ann_dft[variable]:
 
             file_out = file_in.copy().append(op='glb')
-            file_ann_za[variable].append(file_out)
+            file_ann_glb[variable].append(file_out)
             if not file_out.exists() or clobber:
                 control = {'task' : 'transform_file',
                            'kwargs': {'file_out':file_out(),
@@ -273,6 +276,60 @@ if __name__ == '__main__':
                            'kwargs': {'file_out':file_out(),
                                       'file_in':file_in(),
                                       'preprocess' : ['pop_calc_vertical_integral']}}
+                jid = tm.submit([easy,et.json_cmd(control)])
+
+    tm.wait()
+
+#-------------------------------------------------------------------------------
+#-- compute time mean
+#-------------------------------------------------------------------------------
+
+    file_ann_baseline = {}
+    for variable in varlist:
+
+        file_ann_baseline[variable] = []
+        for file_in in file_ann_dft[variable]:
+
+            file_out = file_in.copy().append(op='tavg_'+'%d-%d'%(
+                year_range[0],
+                year_range[0]+19))
+
+            file_ann_baseline[variable].append(file_out)
+
+            if not file_out.exists() or clobber:
+                control = {'task' : 'transform_file',
+                           'kwargs': {'file_out':file_out(),
+                                      'file_in':file_in(),
+                                      'preprocess' : ['calc_mean'],
+                                      'preprocess_kwargs' :
+                                      {'dim':['time'],
+                                       'dimsub' : {'time':[0,20]}}}}
+                jid = tm.submit([easy,et.json_cmd(control)])
+
+    tm.wait()
+
+#-------------------------------------------------------------------------------
+#-- compute anomaly
+#-------------------------------------------------------------------------------
+
+    file_ann_anom = {}
+    for variable in varlist:
+
+        file_ann_anom[variable] = []
+        for i,file_in in enumerate(file_ann_dft[variable]):
+
+            file_out = file_in.copy().append(op='tanm')
+
+            file_ann_anom[variable].append(file_out)
+
+            if not file_out.exists() or clobber:
+                control = {'task' : 'transform_file',
+                           'kwargs': {'file_out':file_out(),
+                                      'file_in':file_in(),
+                                      'preprocess' : ['calc_binary_op'],
+                                      'preprocess_kwargs' :
+                                      {'file_in':file_ann_baseline[variable][i](),
+                                       'operation' : 'subtract'}}}
                 jid = tm.submit([easy,et.json_cmd(control)])
 
     tm.wait()
