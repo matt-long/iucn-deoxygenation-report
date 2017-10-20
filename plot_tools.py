@@ -440,7 +440,8 @@ def canvas_map_contour_overlay(lon,lat,z,
 
 def canvas_full_depth_section(x,y,field,
                               gridspec_spec,
-                              gridspec_index,
+                              row,
+                              col,
                               fig = None,
                               contour_specs = {},
                               colorbar_specs = {},
@@ -464,7 +465,7 @@ def canvas_full_depth_section(x,y,field,
 
     ax = [None]*2
     gs = gridspec.GridSpecFromSubplotSpec(100, 1,
-                                          subplot_spec=gridspec_spec[gridspec_index])
+                                          subplot_spec=gridspec_spec[row,col])
 
     ax[0] = plt.Subplot(fig,gs[:45,0])
     fig.add_subplot(ax[0]) #add_axes([0.1,0.51,0.7,0.35])
