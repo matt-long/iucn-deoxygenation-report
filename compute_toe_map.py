@@ -287,33 +287,42 @@ def compute_toe(index_ens=None):
         nlat = ds[v].shape[2]
         nlon = ds[v].shape[3]
 
-        toe = xr.DataArray(np.ones((nlat,nlon)),dims=('nlat','nlon'))
-        record_length = xr.DataArray(np.ones((nlat,nlon)),dims=('nlat','nlon'))
+        toe = xr.DataArray(np.ones((nlat,nlon))*np.nan,dims=('nlat','nlon'))
+        record_length = xr.DataArray(np.ones((nlat,nlon))*np.nan,dims=('nlat','nlon'))
 
         ncomp = nlat*nlon
         n = 0
-        for i in range(nlat):
-            for j in range(nlon):
+        for j in range(nlat):
+            with timer('j = %d'%j):
 
-                if ds_norm[:,:,j,i].isnull().all():
-                    continue
+                for i in range(nlon):
+                    n += 1
+                    if ds_norm[:,:,j,i].isnull().all():
+                        continue
 
-                detected = (ds_norm.values[:,:,j,i] <= -2.)
+                    detected = (ds_norm.values[:,:,j,i] <= -2.)
 
-                toe_x = np.ones(n_trend)*np.nan
-                for ii in range(n_trend):
-                    for jj in range(n_year):
+                    toe_x = np.ones(n_trend)
+                    toe_x[:] = np.nan
 
-                        if detected[jj:,ii].all():
-                            toe_x[ii] = trend_year[jj]
-                            break
+                    for it in range(n_trend):
 
-                toe.values[j,i] = np.min(toe_x)
-                record_length.values[j,i] = trend_length[np.argmin(toe_x)]
+                        detected_it = detected[:,it]
+                        detected_it = np.where(np.isnan(detected_it),False,detected_it)
 
-                n += 1
-                percent_complete = n*100./ncomp
-                print "\r{:0.2f} %".format(percent_complete),
+                        for l in range(n_year):
+
+                            if detected_it[l:].all():
+                                toe_x[it] = trend_year[l]
+                                break
+
+                    if not np.isnan(toe_x).all():
+                        ndx = np.nanargmin(toe_x)
+                        toe.values[j,i] = toe_x[ndx]
+                        record_length.values[j,i] = trend_length[ndx]
+
+                    percent_complete = n*100./ncomp
+                    print "\r{:0.2f} %".format(percent_complete),
 
         dso = xr.Dataset({'toe':toe,'record_length':record_length})
         file_out = os.path.join(diro['out'],'toe_thermocline.%s.ens_i_%d.nc'%(v,index_ens))
