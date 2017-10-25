@@ -33,7 +33,7 @@ def exec_nb(notebook_filename,kernel_name='python2'):
         print(msg)
         raise
     finally:
-        with open(os.path.basename(notebook_filename), mode='wt') as f:
+        with io.open(os.path.basename(notebook_filename),mode='wt',encoding='utf-8') as f:
             nbformat.write(nb, f)
 
     return out
