@@ -11,16 +11,13 @@ def exec_nb(notebook_filename,kernel_name='python2'):
     '''execute a notebook
     see http://nbconvert.readthedocs.io/en/latest/execute_api.html
     '''
+    import io
     import nbformat
     from nbconvert.preprocessors import ExecutePreprocessor
     from nbconvert.preprocessors import CellExecutionError
 
-    nb_out = 'nb_out'
-    if not os.path.exists(nb_out):
-        call(['mkdir','-p',nb_out])
-
     #-- open notebook
-    with open(notebook_filename) as f:
+    with io.open(notebook_filename, encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
 
     #-- config for execution
@@ -28,7 +25,7 @@ def exec_nb(notebook_filename,kernel_name='python2'):
 
     #-- run with error handling
     try:
-        out = ep.preprocess(nb, {'metadata': {'path': './'+nb_out}})
+        out = ep.preprocess(nb, {'metadata': {'path': './'}})
     except CellExecutionError:
         out = None
         msg = 'Error executing the notebook "%s".\n\n' % notebook_filename
