@@ -19,9 +19,6 @@ xr_open_dataset = {
     'decode_times' : False,
     'decode_coords': False}
 
-easy = './subtree/easy-analysis/esm_tools.py'
-
-
 #-------------------------------------------------------------------------------
 #-- script
 #-------------------------------------------------------------------------------
@@ -30,8 +27,8 @@ year_range = (1920,2100)
 component = 'ocn'
 freq = 'monthly'
 
-varlist = ['OUR:AOU,IAGE','TEMP',
-           'AOU','O2_PRODUCTION','STF_O2','O2','O2_CONSUMPTION','PD','IAGE']
+varlist = ['O2','OUR:AOU,IAGE','TEMP',
+           'AOU','O2_PRODUCTION','STF_O2','O2_CONSUMPTION','PD','IAGE']
 
 #-- compute annual means
 #-- get case info
@@ -43,7 +40,7 @@ info = cesm_le.case_info(include_control = True,
 #-- function
 #-------------------------------------------------------------------------------
 
-def ensemble_ops(file_list,scenario):
+def ensemble_ops(file_list,varname,scenario):
     file_in_list = [f for f,s in zip(file_list,info['scenario'])
                     if s == scenario]
     if not file_in_list:
@@ -51,13 +48,16 @@ def ensemble_ops(file_list,scenario):
 
     file_out_avg = file_in_list[0].copy().update(ens='avg')
     file_out_std = file_in_list[0].copy().update(ens='std')
+    file_out_cnt = file_in_list[0].copy().update(ens='cnt')
     if not file_out_avg.exists() or not file_out_std.exists():
-        control = {'task' : 'ensemble_mean_std',
+        control = {'task' : 'compute_ens_mean_std_brute',
                    'kwargs': {'file_in_list':[f() for f in file_in_list],
-                   'file_out_avg':file_out_avg(),
-                   'file_out_std':file_out_std()}}
-        jid = tm.submit([easy,et.json_cmd(control)])
+                              'varname' : varname,
+                              'file_out_avg':file_out_avg(),
+                              'file_out_std':file_out_std(),
+                              'file_out_cnt':file_out_cnt()}}
 
+        jid = tm.submit([easy,et.json_cmd(control)])
 
 #-------------------------------------------------------------------------------
 #-- function
@@ -85,7 +85,6 @@ def open_ens(sc,op,varlist,sel={},isel={}):
         subsetter = lambda ds: et.dimension_subset(ds,isel=isel,sel=sel)
         dsi = xr.open_mfdataset(files,concat_dim='ens',decode_times=False,
                                 decode_coords=False,preprocess=subsetter)
-
         dsg = dsi.drop([k for k in dsi if k not in plot_grid_vars])
         if 'ens' in dsg.dims:
             dsg = dsg.isel(ens=0)
@@ -177,9 +176,9 @@ if __name__ == '__main__':
 
     tm.wait()
 
-    #for variable in varlist:
-    #    ensemble_ops(file_ann_dft[variable],'tr85')
-    #    ensemble_ops(file_ann_dft[variable],'tr45')
+    for variable in varlist:
+        ensemble_ops(file_ann_dft[variable],variable.split(':')[0],'tr85')
+        ensemble_ops(file_ann_dft[variable],variable.split(':')[0],'tr45')
 
 #-------------------------------------------------------------------------------
 #-- compute zonal means
@@ -208,8 +207,8 @@ if __name__ == '__main__':
     for variable in varlist:
         if variable.split(':')[0] == 'OUR':
             continue
-        ensemble_ops(file_ann_za[variable],'tr85')
-        ensemble_ops(file_ann_za[variable],'tr45')
+        ensemble_ops(file_ann_za[variable],variable.split(':')[0],'tr85')
+        ensemble_ops(file_ann_za[variable],variable.split(':')[0],'tr45')
 
 #-------------------------------------------------------------------------------
 #-- compute global means
@@ -232,8 +231,8 @@ if __name__ == '__main__':
     tm.wait()
 
     for variable in varlist:
-        ensemble_ops(file_ann_glb[variable],'tr85')
-        ensemble_ops(file_ann_glb[variable],'tr45')
+        ensemble_ops(file_ann_glb[variable],variable.split(':')[0],'tr85')
+        ensemble_ops(file_ann_glb[variable],variable.split(':')[0],'tr45')
 
 
 
@@ -258,8 +257,8 @@ if __name__ == '__main__':
     tm.wait()
 
     for variable in varlist:
-        ensemble_ops(file_ann_aavg[variable],'tr85')
-        ensemble_ops(file_ann_aavg[variable],'tr45')
+        ensemble_ops(file_ann_aavg[variable],variable.split(':')[0],'tr85')
+        ensemble_ops(file_ann_aavg[variable],variable.split(':')[0],'tr45')
 
     tm.wait()
 

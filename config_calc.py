@@ -19,7 +19,7 @@ import task_manager as tm
 from regrid import regrid
 from datasrc import cesm_le
 import esm_tools as et
-easy = et.__file__
+easy = et.__file__.replace('.pyc','.py')
 
 #-- directories
 calc_name = 'iucn-ch'
@@ -27,7 +27,7 @@ diro = {}
 diro['out'] = '/glade/scratch/'+os.environ['USER']+'/calcs/'+calc_name
 diro['work'] = '/glade/scratch/'+os.environ['USER']+'/calcs/'+calc_name+'/work'
 diro['tmp'] = '/glade/scratch/'+os.environ['USER']+'/tmp'
-diro['fig'] =  '/glade/p/work/'+os.environ['USER']+'/fig/'+calc_name
+diro['fig'] =  './ms/fig'
 diro['logs'] = './logs'
 
 for pth in diro.values():

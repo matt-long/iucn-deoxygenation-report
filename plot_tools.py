@@ -341,6 +341,10 @@ def adjust_pop_grid(tlon,tlat,field):
     if ni == 320:
         lon[367:,-1] = lon[367:,-1] - 360.
 
+    #-- trick cartopy into doing the right thing:
+    #   it gets confused when the cyclic coords are identical
+    lon[:,0] = lon[:,0]-1e-8
+
     #-- periodicity
     lat  = np.concatenate((tlat,tlat),1)
     lat = lat[:,xL:xR]
@@ -379,6 +383,9 @@ def canvas_map_contour_overlay(lon,lat,z,
     #-- make canvas
     ax = fig.add_subplot(gridspec[row,col],projection=ccrs.Robinson(central_longitude=305.0))
     ax.set_global()
+
+    #-- make masked
+    z = np.ma.masked_invalid(z)
 
     #-- make filled contours
     cf = ax.contourf(lon,lat,z,
