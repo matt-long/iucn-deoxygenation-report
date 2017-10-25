@@ -11,13 +11,4 @@
 - plot_woa_column_min_sat.ipynb
 - plot_woa_o2pdf_mortality_no3deficit.ipynb
 - plot_woa_thermocline_o2_and_age_metric.ipynb
-
-#-- this one doesn't work for some reason
-# - plot_cesm_change_regional_o2.ipynb
-#Traceback (most recent call last):
-#  File "./run_notebooks.py", line 60, in <module>
-#    out = exec_nb(nb)
-#  File "./run_notebooks.py", line 36, in exec_nb
-#    nbformat.write(nb, f)
-#  File "/glade/p/work/mclong/miniconda2/lib/python2.7/site-packages/nbformat/__init__.py", line 169, in write
-#    fp.write(s)
+- plot_cesm_change_regional_o2.ipynb
