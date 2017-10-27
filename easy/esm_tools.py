@@ -537,9 +537,9 @@ def pop_derive_var_NPP(ds,drop_derivedfrom_vars=True):
 
 def pop_derive_var_POC_100m(ds,drop_derivedfrom_vars=True):
 
-    require_variables(ds,['POC_FLUX_IN']
+    require_variables(ds,['POC_FLUX_IN'])
 
-    ds['POC_100m'] = ds.POC_FLUX_IN.isel(z_t=10)
+    ds['POC_100m'] = ds.POC_FLUX_IN.isel(z_t=10,drop=True)
 
     if drop_derivedfrom_vars:
         ds = ds.drop(['POC_FLUX_IN'])

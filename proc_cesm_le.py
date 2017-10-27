@@ -27,7 +27,7 @@ year_range = (1920,2100)
 component = 'ocn'
 freq = 'monthly'
 
-varlist = ['POC_100m','O2','OUR:AOU,IAGE','TEMP',
+varlist = ['POC_100m:POC_FLUX_IN','O2','OUR:AOU,IAGE','TEMP',
            'AOU','O2_PRODUCTION','STF_O2','O2_CONSUMPTION','PD','IAGE']
 
 #-- compute annual means
@@ -307,7 +307,7 @@ if __name__ == '__main__':
                                       'preprocess' : ['calc_mean'],
                                       'preprocess_kwargs' :
                                       {'dim':['time'],
-                                       'dimsub' : {'time':[0,20]}}}}
+                                       'isel' : {'time':[0,20]}}}}
                 jid = tm.submit([easy,et.json_cmd(control)])
 
     tm.wait()
