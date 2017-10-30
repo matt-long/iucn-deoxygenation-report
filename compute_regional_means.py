@@ -11,7 +11,7 @@ def tropical_hilat(index_ens):
 
     print('\n'.join(['-'*80,'load data','-'*80,]))
     sc = 'tr85'
-    op = 'ann_dft'
+    op = 'ann'
 
     varlist = ['O2','AOU','TEMP','IAGE']
     dsi = []
@@ -56,7 +56,7 @@ def tropical_hilat(index_ens):
     #--compute region mask
     #-------------------------------------------------------------------------------
 
-    file_out = os.path.join(diro['out'],'region_0glb_1trp_2hlt_upper1000m.ens_i_%03d.nc'%index_ens)
+    file_out = os.path.join(diro['out'],'region_0glb_1trp_2hlt_upper1000m.%s.ens_i_%03d.nc'%(op,index_ens))
 
     tr85r = et.pop_calc_spatial_mean(tr85.copy(),avg_over_dims=['z_t','nlat','nlon'],
                                      region_mask=rmask)
@@ -85,7 +85,7 @@ def tropical_hilat(index_ens):
     #--compute region mask
     #-------------------------------------------------------------------------------
 
-    file_out = os.path.join(diro['out'],'region_0glb_1trp_2hlt_profile.ens_i_%03d.nc'%index_ens)
+    file_out = os.path.join(diro['out'],'region_0glb_1trp_2hlt_profile.%s.ens_i_%03d.nc'%(op,index_ens))
     tr85r = et.pop_calc_spatial_mean(tr85.copy(),avg_over_dims=['nlat','nlon'],
                                      region_mask=rmask)
     print tr85r
