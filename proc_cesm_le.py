@@ -82,9 +82,14 @@ def open_ens(sc,op,varlist,sel={},isel={}):
             sys.exit(1)
 
         #-- preprocess function: subset dataset (if necessary)
-        subsetter = lambda ds: et.dimension_subset(ds,isel=isel,sel=sel)
+        def drop_vars(ds):
+            ds = ds.drop([k for k in ds if k not in varlist+plot_grid_vars])
+            return ds
         dsi = xr.open_mfdataset(files,concat_dim='ens',decode_times=False,
-                                decode_coords=False,preprocess=subsetter)
+                                decode_coords=False,preprocess=drop_vars)
+
+        dsi = et.dimension_subset(dsi,isel=isel,sel=sel)
+
         dsg = dsi.drop([k for k in dsi if k not in plot_grid_vars])
         if 'ens' in dsg.dims:
             dsg = dsg.isel(ens=0)
