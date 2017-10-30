@@ -11,7 +11,7 @@ def tropical_hilat(index_ens):
 
     print('\n'.join(['-'*80,'load data','-'*80,]))
     sc = 'tr85'
-    op = 'ann'
+    op = 'ann_dft'
 
     varlist = ['O2','AOU','TEMP','IAGE']
     dsi = []

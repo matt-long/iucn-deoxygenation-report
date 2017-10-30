@@ -485,6 +485,7 @@ def canvas_full_depth_section(x,y,field,
 
     ax[0].set_ylim([1000.,0.])
     ax[0].set_yticklabels(np.arange(0,800,200))
+    ax[0].set_xticklabels([])
     ax[0].xaxis.set_ticks_position('top')
 
     ax[1].set_ylim([5000.,1000.])
@@ -496,7 +497,6 @@ def canvas_full_depth_section(x,y,field,
     for axi in ax:
         axi.set_xlim(xlim)
         axi.set_facecolor((0, 0, 0))
-        axi.set_xticklabels([])
         axi.minorticks_on()
         axi.tick_params(which='major',direction='out',width=1,  length=6)
         axi.tick_params(which='minor',direction='out',width=0.5,  length=4)
