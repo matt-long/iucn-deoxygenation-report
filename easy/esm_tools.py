@@ -9,7 +9,6 @@ import tempfile
 import json
 
 debug = True
-tmpdir = os.environ['TMPDIR']
 
 #time_chunks = 5 * 12 # read data in 5 year chunks
 #    'chunks' : time_chunks,
