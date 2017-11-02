@@ -19,15 +19,18 @@ import esm_tools as et
 easy = et.__file__.replace('.pyc','.py')
 
 #-- machine
-hostname = os.environ['HOSTNAME']
-if 'cgd.ucar.edu' in hostname:
-    scratch = '/project/oce/mclong/scratch'
+if 'HOSTNAME' in os.environ:
+    hostname = os.environ['HOSTNAME']
+    if 'cgd.ucar.edu' in hostname:
+        scratch = '/project/oce/mclong/scratch'
+    else:
+        import task_manager as tm
+        from regrid import regrid
+        from datasrc import cesm_le
+        scratch = '/glade/scratch/'+os.environ['USER']
 else:
-    import task_manager as tm
-    from regrid import regrid
-    from datasrc import cesm_le
-    scratch = '/glade/scratch/'+os.environ['USER']
-
+    scratch = './'
+    
 #-- directories
 calc_name = 'iucn-ch'
 diro = {}
