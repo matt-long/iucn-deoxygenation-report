@@ -492,9 +492,47 @@ def pop_derive_var(ds,varname,drop_derivedfrom_vars=True):
         return pop_derive_var_NPP(ds,drop_derivedfrom_vars)
     elif varname == 'POC_100m':
         return pop_derive_var_POC_100m(ds,drop_derivedfrom_vars)
+    elif varname == 'pCFC12':
+        return pop_derive_var_pCFC12(ds,drop_derivedfrom_vars)
     else:
         print('ERROR: unknown derived varname: %s'%varname)
         sys.exit(1)
+
+#----------------------------------------------------------------
+#-- function
+#----------------------------------------------------------------
+
+def pop_derive_var_pCFC11(ds,drop_derivedfrom_vars=True):
+
+    require_variables(ds,['CFC11','TEMP','SALT'])
+    from solubility import calc_cfc11sol
+
+    ds['pCFC11'] = ds['CFC11'] * 1e-9 / calc_cfc11sol(ds['SALT'],ds['TEMP'])
+    ds.pCFC11.attrs['long_name'] = 'pCFC-11'
+    ds.pCFC11.attrs['units'] = 'patm'
+
+    if drop_derivedfrom_vars:
+        ds = ds.drop(['CFC11','TEMP','SALT'])
+
+    return ds
+
+#----------------------------------------------------------------
+#-- function
+#----------------------------------------------------------------
+
+def pop_derive_var_pCFC12(ds,drop_derivedfrom_vars=True):
+
+    require_variables(ds,['CFC12','TEMP','SALT'])
+    from solubility import calc_cfc12sol
+
+    ds['pCFC12'] = ds['CFC12'] * 1e-9 / calc_cfc12sol(ds['SALT'],ds['TEMP'])
+    ds.pCFC12.attrs['long_name'] = 'pCFC-12'
+    ds.pCFC12.attrs['units'] = 'patm'
+
+    if drop_derivedfrom_vars:
+        ds = ds.drop(['CFC12','TEMP','SALT'])
+
+    return ds
 
 #----------------------------------------------------------------
 #-- function

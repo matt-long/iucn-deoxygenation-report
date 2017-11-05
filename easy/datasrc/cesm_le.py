@@ -125,18 +125,25 @@ if __name__ == '__main__':
     freq = 'monthly'
 
     for sim in ['LE','ME']:
+
         if sim == 'LE':
-            info = case_info(include_control = True,
-                             include_rcp85 = True,
-                             include_rcp45 = False)
+            include_control = True
+            include_rcp85 = True
+            include_rcp45 = False
+
             droot = '/glade/p/cesmLE/CESM-CAM5-BGC-LE'
             hroot = '/CCSM/csm/CESM-CAM5-BGC-LE'
         elif sim == 'ME':
-            info = case_info(include_control = False,
-                             include_rcp85 = False,
-                             include_rcp45 = True)
+            include_control = False
+            include_rcp85 = False
+            include_rcp45 = True
+
             droot = '/glade/p/ncgd0014/CESM-CAM5-BGC-ME'
             hroot = '/CCSM/csm/CESM-CAM5-BGC-LE'
+
+        info = case_info(include_control = include_control,
+                         include_rcp85 = include_rcp85,
+                         include_rcp45 = include_rcp45)
 
         #-- find the files and either link or stage for transfer
         files_to_get = []
