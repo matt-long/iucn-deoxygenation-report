@@ -404,9 +404,10 @@ def canvas_map_contour_overlay(lon,lat,z,
                     linewidths = 0.5,
                     transform=ccrs.PlateCarree(),
                     zorder=len(cf.collections)+10)
-    cs.levels = [contour_label_format(val) for val in cs.levels]
-    fmt = '%r'
+
     #-- add contour labels
+    cs.levels = [contour_label_format(val) for val in cs.levels]
+    fmt = '%r'    
     lb = plt.clabel(cs, fontsize=6,
                    inline = True,
                    fmt=fmt)
