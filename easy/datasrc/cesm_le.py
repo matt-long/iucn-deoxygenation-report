@@ -43,8 +43,9 @@ def case_info(include_control=True,
 
     #-- rcp85
     if include_rcp85:
+        # 33 has zeros for O2 in March 1938; 25 is missing a DENITRIF file
         ensi = ['%03d'%i for i in range(1,36)
-            if not any([i == ii for ii in range(3,9)]) and i != 33] # 33 has zeros for O2 in March 1938
+            if not any([i == ii for ii in range(3,9)]) and i != 33 and i != 25]
         ensi.extend(['%03d'%i for i in range(101,106)])
         ens.extend(ensi)
         caselist.extend([(T20C+'.'+e,TR85+'.'+e) for e in ensi])

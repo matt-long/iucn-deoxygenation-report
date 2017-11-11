@@ -27,7 +27,7 @@ year_range = (1920,2100)
 component = 'ocn'
 freq = 'monthly'
 
-varlist = ['POC_100m:POC_FLUX_IN','O2','OUR:AOU,IAGE','TEMP',
+varlist = ['DENITRIF','POC_100m:POC_FLUX_IN','O2','OUR:AOU,IAGE','TEMP',
            'AOU','O2_PRODUCTION','STF_O2','O2_CONSUMPTION','PD','IAGE']
 
 #-- compute annual means

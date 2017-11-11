@@ -407,7 +407,7 @@ def canvas_map_contour_overlay(lon,lat,z,
 
     #-- add contour labels
     cs.levels = [contour_label_format(val) for val in cs.levels]
-    fmt = '%r'    
+    fmt = '%r'
     lb = plt.clabel(cs, fontsize=6,
                    inline = True,
                    fmt=fmt)
@@ -482,7 +482,31 @@ def canvas_full_depth_section(x,y,field,
 
     cf = [None]*2
     cf[0] = ax[0].contourf(x, y, field, **contour_specs)
+    #-- add contour lines
+    cs = ax[0].contour(x, y, field,
+                    colors='k',
+                    levels = contour_specs['levels'],
+                    linewidths = 0.5,
+                    zorder=len(cf[0].collections)+10)
+    cs.levels = [contour_label_format(val) for val in cs.levels]
+    fmt = '%r'
+    lb = plt.clabel(cs, fontsize=6,
+                   inline = True,
+                   fmt=fmt)
+
+
+
     cf[1] = ax[1].contourf(x, y, field, **contour_specs)
+    cs = ax[1].contour(x, y, field,
+                    colors='k',
+                    levels = contour_specs['levels'],
+                    linewidths = 0.5,
+                    zorder=len(cf[1].collections)+10)
+    cs.levels = [contour_label_format(val) for val in cs.levels]
+    fmt = '%r'
+    lb = plt.clabel(cs, fontsize=6,
+                   inline = True,
+                   fmt=fmt)
 
     ax[0].set_ylim([1000.,0.])
     ax[0].set_yticklabels(np.arange(0,800,200))
