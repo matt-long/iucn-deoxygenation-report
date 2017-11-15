@@ -39,7 +39,7 @@ diro = {}
 diro['out'] = os.path.join(scratch,'calcs',calc_name)
 diro['work'] = os.path.join(scratch,'calcs',calc_name,'work')
 diro['tmp'] = os.path.join(scratch,'tmp')
-diro['fig'] =  '../fig'
+diro['fig'] =  '../ms/fig'
 diro['logs'] = './logs'
 
 for pth in diro.values():
