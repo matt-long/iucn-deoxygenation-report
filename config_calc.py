@@ -3,34 +3,36 @@ import os
 import sys
 from glob import glob
 from subprocess import call
-
-#-- path additions
-path_tools = ['./easy']
-for p in path_tools:
-    sys.path.insert(0,os.path.abspath(os.path.expanduser(p)))
+import socket
 
 #-- analysis
 from datetime import datetime
 import xarray as xr
 import numpy as np
 
+hostname = socket.gethostname()
+
+#-- path additions
+path_tools = ['./easy']
+for p in path_tools:
+    sys.path.insert(0,os.path.abspath(os.path.expanduser(p)))
+
 #-- easy
 import esm_tools as et
 easy = et.__file__.replace('.pyc','.py')
 
 #-- machine
-if 'HOSTNAME' in os.environ:
-    hostname = os.environ['HOSTNAME']
-    if 'cgd.ucar.edu' in hostname:
-        scratch = '/project/oce/mclong/scratch'
-    else:
-        import task_manager as tm
-        from regrid import regrid
-        from datasrc import cesm_le
-        scratch = '/glade/scratch/'+os.environ['USER']
+if any(s in hostname for s in ['cheyenne','yslogin','gesyer','caldera']):
+    import task_manager as tm
+    from datasrc import cesm_le
+    scratch = '/glade/scratch/'+os.environ['USER']
+
+elif 'cgd.ucar.edu' in hostname:
+    scratch = '/project/oce/mclong/scratch'
+
 else:
-    scratch = './'
-    
+    scratch = './scratch'
+
 #-- directories
 calc_name = 'iucn-ch'
 diro = {}
