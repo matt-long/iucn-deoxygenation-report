@@ -16,7 +16,7 @@
 \RequirePackage{xcolor}
 
 
-\RequirePackage[version=4]{mhchem}
+%\RequirePackage[version=4]{mhchem}
 %% used for running head which is in light gray
 
 \definecolor{ltgray}{cmyk}{.12,0,0,.3}
