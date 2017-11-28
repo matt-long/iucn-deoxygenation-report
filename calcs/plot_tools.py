@@ -430,7 +430,7 @@ def canvas_map_contour_overlay(lon,lat,z,
             break
     len_gs = i
     if len_gs == 1:
-        shrink_factor = 0.5
+        shrink_factor = 0.35
     else:
         shrink_factor = 0.75
 
